@@ -1,0 +1,32 @@
+- name: requirements
+  apt:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - python-pip
+    - lxc
+    - lxc-dev
+  tags: configure
+
+- name: requirements
+  pip:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - lxc-python2
+    - six
+  tags: configure
+    
+- name: Create containers
+  lxd_container:
+    name: "{{hostvars[item]['inventory_hostname']}}"
+    state: "{{item.state|default('started')}}"
+    source:
+      type: image
+      mode: pull
+      server: https://images.linuxcontainers.org
+      protocol: lxd
+      alias: "{{hostvars[item]['distro']}}"
+    wait_for_ipv4_addresses: true
+  timeout: 600
+  with_items: "{{groups.containers}}"
